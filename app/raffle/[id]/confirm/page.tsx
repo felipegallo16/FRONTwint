@@ -47,44 +47,18 @@ export default function ConfirmPurchase({ params }: { params: { id: string } }) 
     const fetchRaffleDetails = async () => {
       try {
         if (isDemoMode || !isApiAvailable || isChecking) {
-          const sampleRaffle: Sorteo = {
-            id: params.id,
-            nombre: "Sorteo de Ejemplo",
-            descripcion: "Este es un sorteo de ejemplo para mostrar cuando hay errores de carga.",
-            tipo: "MATERIAL",
-            premio: {
-              tipo: "MATERIAL",
-              descripcion: "Premio de Ejemplo",
-              valor: 100,
-              moneda: "USD",
-            },
-            configuracion: {
-              precio_por_numero: 3,
-              total_numeros: 100,
-              fecha_fin: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-              estado: "ACTIVO",
-            },
-            numeros_vendidos: [],
-            creado_por: "sistema",
-            fecha_creacion: new Date(),
-            fecha_actualizacion: new Date(),
-          }
-          setSorteo(sampleRaffle)
-          setPurchaseDetails((prev) => ({
-            ...prev,
-            totalCost: sampleRaffle.configuracion.precio_por_numero * prev.quantity,
-          }))
-        } else {
-          const response = await getSorteoById(params.id)
-          if (response.error || !response.data) {
-            throw new Error(response.error || "No se encontraron datos del sorteo")
-          }
-          setSorteo(response.data)
-          setPurchaseDetails((prev) => ({
-            ...prev,
-            totalCost: (response.data?.configuracion?.precio_por_numero || 0) * prev.quantity,
-          }))
+          setError("No se puede acceder a los datos del sorteo en este momento")
+          return
         }
+        const response = await getSorteoById(params.id)
+        if (response.error || !response.data) {
+          throw new Error(response.error || "No se encontraron datos del sorteo")
+        }
+        setSorteo(response.data)
+        setPurchaseDetails((prev) => ({
+          ...prev,
+          totalCost: (response.data?.configuracion?.precio_por_numero || 0) * prev.quantity,
+        }))
       } catch (error: any) {
         console.error("Error al cargar detalles del sorteo:", error)
         setError(error.message || "No se pudieron cargar los detalles del sorteo")

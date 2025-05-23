@@ -1,10 +1,10 @@
 export type TipoSorteo = "TOKEN" | "MATERIAL"
-export type EstadoSorteo = "BORRADOR" | "ACTIVO" | "PAUSADO" | "FINALIZADO" | "CANCELADO"
+export type EstadoSorteo = "ACTIVO" | "PAUSADO" | "FINALIZADO"
 
 export interface PremioToken {
   tipo: "TOKEN"
-  cantidad: number
   token: string
+  cantidad: number
 }
 
 export interface PremioMaterial {
@@ -16,30 +16,33 @@ export interface PremioMaterial {
 
 export type Premio = PremioToken | PremioMaterial
 
+export interface ConfiguracionSorteo {
+  estado: EstadoSorteo
+  fecha_inicio: Date
+  fecha_fin?: Date
+  total_numeros: number
+  precio_por_numero: number
+  imagen_url?: string
+}
+
+export interface ActualizacionEstado {
+  configuracion: {
+    estado: EstadoSorteo
+  }
+}
+
 export interface Sorteo {
   id: string
   nombre: string
   descripcion: string
   tipo: TipoSorteo
   premio: Premio
-  configuracion: {
-    precio_por_numero: number
-    total_numeros: number
-    fecha_fin: Date
-    fecha_inicio?: Date
-    minimo_numeros_vendidos?: number
-    maximo_numeros_por_usuario?: number
-    porcentaje_minimo_vendido?: number
-    reglas_especiales?: string
-    imagen_url?: string
-    estado: EstadoSorteo
-  }
+  configuracion: ConfiguracionSorteo
   numeros_vendidos: number[]
-  premio_acumulado?: number
-  sorteo_anterior?: string
   creado_por: string
   fecha_creacion: Date
   fecha_actualizacion: Date
+  premio_acumulado?: number
   ganador?: {
     numero: number
     nullifier_hash: string

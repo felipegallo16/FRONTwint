@@ -9,6 +9,7 @@ import { useI18n } from "@/contexts/i18n-context"
 import RaffleForm from "@/components/admin/raffle-form"
 import { useNotifications } from "@/components/notifications"
 import type { Sorteo } from "@/types/sorteo"
+import { createRaffle } from "@/lib/api"
 
 export default function CreateRaffle() {
   const { t } = useI18n()
@@ -22,11 +23,11 @@ export default function CreateRaffle() {
     setError(null)
 
     try {
-      // En una implementación real, aquí se procesaría la imagen y se enviarían los datos al backend
       console.log("Datos del sorteo a crear:", raffleData)
-
-      // Simular una petición al backend
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      
+      // Enviar los datos al backend
+      const createdRaffle = await createRaffle(raffleData)
+      console.log("Sorteo creado:", createdRaffle)
 
       // Mostrar notificación de éxito
       showNotification("success", t("admin.raffleCreatedSuccess", "common"))

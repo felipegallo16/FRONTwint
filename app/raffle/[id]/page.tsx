@@ -49,47 +49,9 @@ export default function RaffleDetail({ params }: { params: { id: string } }) {
 
       try {
         if (isDemoMode || !isApiAvailable) {
-          // Datos de ejemplo para modo demo
-          const sampleRaffle: Sorteo = {
-            id: params.id,
-            nombre: "Sorteo de Ejemplo",
-            descripcion: "Un sorteo de ejemplo para modo demo.",
-            tipo: "MATERIAL" as TipoSorteo,
-            premio: { tipo: "MATERIAL", descripcion: "Producto Ejemplo", valor: 100, moneda: "USD" },
-            configuracion: {
-              precio_por_numero: 5,
-              total_numeros: 100,
-              fecha_fin: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-              estado: "ACTIVO",
-              imagen_url: "/images/placeholder.jpg",
-            },
-            numeros_vendidos: Array.from({ length: 30 }, (_, i) => i + 1),
-            creado_por: "sistema",
-            fecha_creacion: new Date(),
-            fecha_actualizacion: new Date(),
-          }
-          setSorteo(sampleRaffle)
-
-          const estadoMuestra: EstadoDetallado = {
-            id: sampleRaffle.id,
-            nombre: sampleRaffle.nombre,
-            estado: sampleRaffle.configuracion.estado,
-            fechaFin: sampleRaffle.configuracion.fecha_fin,
-            numerosVendidos: sampleRaffle.numeros_vendidos.length,
-            totalNumeros: sampleRaffle.configuracion.total_numeros,
-            porcentajeVendido: Math.round(
-              (sampleRaffle.numeros_vendidos.length / sampleRaffle.configuracion.total_numeros) * 100
-            ),
-            premio: sampleRaffle.premio,
-          }
-          setEstadoDetallado(estadoMuestra)
-
-          const mockUnavailable = sampleRaffle.numeros_vendidos.map(num => formatNumber(num))
-          const mockAvailable = Array.from({ length: sampleRaffle.configuracion.total_numeros }, (_, i) =>
-            formatNumber(i + 1)
-          ).filter(num => !mockUnavailable.includes(num))
-          setAvailableNumbers(mockAvailable)
-          setUnavailableNumbers(mockUnavailable)
+          // En lugar de usar datos de ejemplo, mostrar un mensaje de error
+          setError("No se puede acceder a los datos del sorteo en este momento")
+          return
         } else {
           const [sorteoRes, estadoRes, numbersRes] = await Promise.all([
             getSorteoById(params.id),

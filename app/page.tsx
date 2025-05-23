@@ -6,66 +6,24 @@ import Header from "@/components/header"
 import Navigation from "@/components/navigation"
 import { useWorldAppAuth } from "@/components/world-app-integration"
 import { AnimatedStagger, AnimatedStaggerItem, AnimatedSlideUp } from "@/components/animated-components"
-import { getSorteos } from "@/services/api"
-import { useApiAvailability } from "@/hooks/useApi"
+import { getRaffles } from "@/lib/api"
 import type { Sorteo } from "@/types/sorteo"
 import { AlertCircle } from "lucide-react"
 
 const RaffleCard = lazy(() => import("@/components/raffle-card"))
 
-const sampleRaffles: Sorteo[] = [
-  {
-    id: "1",
-    nombre: "Sorteo de Prueba 1",
-    descripcion: "Un sorteo increíble para probar la plataforma.",
-    tipo: "MATERIAL",
-    premio: { tipo: "MATERIAL", descripcion: "iPhone 14", valor: 999, moneda: "USD" },
-    configuracion: { 
-      precio_por_numero: 5, 
-      total_numeros: 100, 
-      fecha_fin: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000), 
-      estado: "ACTIVO", 
-      imagen_url: "" 
-    },
-    numeros_vendidos: Array.from({ length: 30 }, () => Math.floor(Math.random() * 100)),
-    creado_por: "admin",
-    fecha_creacion: new Date(),
-    fecha_actualizacion: new Date(),
-  },
-  {
-    id: "2",
-    nombre: "Sorteo de Tokens",
-    descripcion: "Gana tokens WLD para usar en la plataforma.",
-    tipo: "TOKEN",
-    premio: { tipo: "TOKEN", cantidad: 500, token: "WLD" },
-    configuracion: { 
-      precio_por_numero: 2, 
-      total_numeros: 200, 
-      fecha_fin: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000), 
-      estado: "ACTIVO", 
-      imagen_url: "" 
-    },
-    numeros_vendidos: Array.from({ length: 50 }, () => Math.floor(Math.random() * 200)),
-    premio_acumulado: 100,
-    creado_por: "admin",
-    fecha_creacion: new Date(),
-    fecha_actualizacion: new Date(),
-  },
-]
-
 export default function Home() {
-  const { isWorldIDVerified, isDemoMode } = useWorldAppAuth() // Usar propiedades correctas
+  const { isWorldIDVerified, isDemoMode } = useWorldAppAuth()
   const router = useRouter()
-  const [activeRaffles, setActiveRaffles] = useState<Sorteo[]>([])
+  const [raffles, setRaffles] = useState<Sorteo[]>([])
   const [isLoadingRaffles, setIsLoadingRaffles] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const { isApiAvailable, isChecking } = useApiAvailability()
 
   useEffect(() => {
-    if (!isChecking && !isWorldIDVerified && !isDemoMode) {
+    if (!isWorldIDVerified && !isDemoMode) {
       router.push("/login")
     }
-  }, [isChecking, isWorldIDVerified, isDemoMode, router])
+  }, [isWorldIDVerified, isDemoMode, router])
 
   useEffect(() => {
     const fetchRaffles = async () => {
@@ -73,38 +31,66 @@ export default function Home() {
       setIsLoadingRaffles(true)
       setError(null)
       try {
-        if (isDemoMode || !isApiAvailable) {
+        if (isDemoMode) {
           console.log("Usando datos de muestra para los sorteos")
           await new Promise((resolve) => setTimeout(resolve, 1000))
-          setActiveRaffles(sampleRaffles)
-        } else {
-          console.log("Obteniendo datos reales de los sorteos")
-          const response = await getSorteos()
-          if (response.error) throw new Error(response.error)
-          setActiveRaffles(response.data || [])
+          setRaffles([])
+          return
         }
+
+        console.log("Obteniendo datos reales de los sorteos")
+        const data = await getRaffles()
+        // Filtrar solo sorteos activos y finalizados
+        const filteredRaffles = data.filter(
+          (raffle) => raffle.configuracion.estado === "ACTIVO" || raffle.configuracion.estado === "FINALIZADO"
+        )
+        setRaffles(filteredRaffles)
       } catch (error: any) {
         console.error("Error al cargar sorteos:", error)
         setError(error.message || "No se pudieron cargar los sorteos")
-        setActiveRaffles(sampleRaffles)
+        setRaffles([])
       } finally {
         setIsLoadingRaffles(false)
       }
     }
-    if (!isChecking) fetchRaffles()
-  }, [isWorldIDVerified, isDemoMode, isApiAvailable, isChecking])
 
-  if (isChecking) {
-    return <div>Cargando...</div>
+    fetchRaffles()
+  }, [isWorldIDVerified, isDemoMode])
+
+  if (isLoadingRaffles) {
+    return (
+      <main>
+        <Header />
+        <div className="flex justify-center py-8">
+          <div className="w-8 h-8 border-t-2 border-wt-primary rounded-full animate-spin"></div>
+        </div>
+        <Navigation />
+      </main>
+    )
   }
 
   return (
     <main>
       <Header />
-      <div>
-        {activeRaffles.map((raffle) => (
-          <RaffleCard key={raffle.id} {...raffle} />
-        ))}
+      <div className="p-4 max-w-4xl mx-auto">
+        {error && (
+          <div className="bg-red-100 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-6 flex items-center">
+            <AlertCircle className="w-5 h-5 text-red-500 mr-3" />
+            <p className="text-red-700 dark:text-red-300">{error}</p>
+          </div>
+        )}
+
+        {raffles.length === 0 ? (
+          <div className="text-center py-8 text-wt-text-secondary">
+            No hay sorteos disponibles en este momento
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {raffles.map((raffle) => (
+              <RaffleCard key={raffle.id} {...raffle} />
+            ))}
+          </div>
+        )}
       </div>
       <Navigation />
     </main>

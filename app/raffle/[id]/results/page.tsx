@@ -29,52 +29,20 @@ export default function RaffleResults({ params }: { params: { id: string } }) {
 
       try {
         if (isDemoMode || !isApiAvailable) {
-          await new Promise((resolve) => setTimeout(resolve, 1000))
-          const sampleRaffle: Sorteo = {
-            id: params.id,
-            nombre: "PlayStation 5 Bundle",
-            descripcion: "Win a PS5 with 2 controllers and 3 games",
-            tipo: "MATERIAL",
-            premio: {
-              tipo: "MATERIAL",
-              descripcion: "PlayStation 5 Bundle",
-              valor: 600,
-              moneda: "USD",
-            },
-            configuracion: {
-              precio_por_numero: 3,
-              total_numeros: 1500,
-              fecha_fin: new Date("2023-07-01"),
-              estado: "FINALIZADO",
-              imagen_url: "/images/ps5.jpg",
-            },
-            numeros_vendidos: Array.from({ length: 1500 }, (_, i) => i + 1),
-            creado_por: "admin",
-            fecha_creacion: new Date("2023-01-01"),
-            fecha_actualizacion: new Date("2023-01-01"),
-            ganador: {
-              numero: 777,
-              nullifier_hash: "0x123456789abcdef",
-            },
-          }
-          setSorteo(sampleRaffle)
-          setGanador({
-            numero: 777,
-            nullifier_hash_masked: "0x123...abcdef",
-          })
-        } else {
-          const sorteoResponse = await getSorteoById(params.id)
-          if (sorteoResponse.error || !sorteoResponse.data) {
-            throw new Error(sorteoResponse.error || "No se encontraron datos del sorteo")
-          }
-          setSorteo(sorteoResponse.data)
-
-          const ganadorResponse = await getGanadorSorteo(params.id)
-          if (ganadorResponse.error || !ganadorResponse.data) {
-            throw new Error(ganadorResponse.error || "No se encontraron datos del ganador")
-          }
-          setGanador(ganadorResponse.data)
+          setError("No se puede acceder a los resultados del sorteo en este momento")
+          return
         }
+        const sorteoResponse = await getSorteoById(params.id)
+        if (sorteoResponse.error || !sorteoResponse.data) {
+          throw new Error(sorteoResponse.error || "No se encontraron datos del sorteo")
+        }
+        setSorteo(sorteoResponse.data)
+
+        const ganadorResponse = await getGanadorSorteo(params.id)
+        if (ganadorResponse.error || !ganadorResponse.data) {
+          throw new Error(ganadorResponse.error || "No se encontraron datos del ganador")
+        }
+        setGanador(ganadorResponse.data)
       } catch (error: any) {
         console.error("Error al cargar resultados del sorteo:", error)
         setError(error.message || "No se pudieron cargar los resultados del sorteo")
